@@ -1,0 +1,17 @@
+var WA : { red, green, blue };
+var NT : { red, green, blue };
+var SA : { red, green, blue };
+var Q : { red, green, blue };
+var NSW : { red, green, blue };
+var V : { red, green, blue };
+var T : { red, green, blue };
+
+constraint WA /= NT;
+constraint WA /= SA;
+constraint NT /= SA;
+constraint NT /= Q;
+constraint SA /= Q;
+constraint SA /= NSW;
+constraint SA /= V;
+constraint Q /= NSW;
+constraint NSW /= V;

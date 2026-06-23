@@ -1,0 +1,25 @@
+cabal-version: 2.4
+name:          project
+version:       0.1.0.0
+
+-- Expose core modules as a library so both the exe and test suite can import them.
+library
+  exposed-modules:  AST, Parser, Solver
+  build-depends:    base >= 4.14, parsec, containers
+  hs-source-dirs:   src
+  default-language: Haskell2010
+
+executable project-exe
+  main-is:          Main.hs
+  build-depends:    base >= 4.14, project, containers
+  hs-source-dirs:   app
+  default-language: Haskell2010
+
+test-suite project-tests
+  type:               exitcode-stdio-1.0
+  main-is:            Spec.hs
+  other-modules:      ParserSpec, SolverSpec, EndToEndSpec
+  hs-source-dirs:     test
+  build-depends:      base >= 4.14, project, hspec >= 2.0, QuickCheck >= 2.14, containers
+  build-tool-depends: hspec-discover:hspec-discover
+  default-language:   Haskell2010

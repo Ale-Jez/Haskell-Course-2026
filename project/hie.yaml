@@ -1,0 +1,16 @@
+cradle:
+  cabal:
+    - path: "./Main.hs"
+      component: "exe:project-exe"
+    - path: "./AST.hs"
+      component: "lib:project"
+    - path: "./Parser.hs"
+      component: "lib:project"
+    - path: "./Solver.hs"
+      component: "lib:project"
+    - path: "./test/Spec.hs"
+      component: "test:project-tests"
+    - path: "./test/ParserSpec.hs"
+      component: "test:project-tests"
+    - path: "./test/SolverSpec.hs"
+      component: "test:project-tests"

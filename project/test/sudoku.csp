@@ -1,0 +1,61 @@
+// 4x4 Mini-Sudoku
+// Variables are named Row-Column (e.g., R1C2 is Row 1, Col 2)
+
+var R1C1 : 1..4;
+var R1C2 : 1..4;
+var R1C3 : 1..4;
+var R1C4 : 1..4;
+
+var R2C1 : 1..4;
+var R2C2 : 1..4;
+var R2C3 : 1..4;
+var R2C4 : 1..4;
+
+var R3C1 : 1..4;
+var R3C2 : 1..4;
+var R3C3 : 1..4;
+var R3C4 : 1..4;
+
+var R4C1 : 1..4;
+var R4C2 : 1..4;
+var R4C3 : 1..4;
+var R4C4 : 1..4;
+
+// --- CLUES (Pre-filled starting numbers) ---
+// We use the binary equality operator (==) to set our starting puzzle state.
+// Board looks like this:
+// 3 _ | _ 2
+// _ 1 | 4 _
+// ---------
+// 1 2 | _ 4
+// _ _ | 2 1
+
+constraint R1C1 == 3;
+constraint R1C4 == 2;
+constraint R2C2 == 1;
+constraint R2C3 == 4;
+constraint R3C1 == 1;
+constraint R3C2 == 2;
+constraint R3C4 == 4;
+constraint R4C3 == 2;
+constraint R4C4 == 1;
+
+// --- RULES ---
+
+// 1. All rows must have different numbers
+constraint allDifferent(R1C1, R1C2, R1C3, R1C4);
+constraint allDifferent(R2C1, R2C2, R2C3, R2C4);
+constraint allDifferent(R3C1, R3C2, R3C3, R3C4);
+constraint allDifferent(R4C1, R4C2, R4C3, R4C4);
+
+// 2. All columns must have different numbers
+constraint allDifferent(R1C1, R2C1, R3C1, R4C1);
+constraint allDifferent(R1C2, R2C2, R3C2, R4C2);
+constraint allDifferent(R1C3, R2C3, R3C3, R4C3);
+constraint allDifferent(R1C4, R2C4, R3C4, R4C4);
+
+// 3. The four 2x2 sub-grids must have different numbers
+constraint allDifferent(R1C1, R1C2, R2C1, R2C2); // Top-Left
+constraint allDifferent(R1C3, R1C4, R2C3, R2C4); // Top-Right
+constraint allDifferent(R3C1, R3C2, R4C1, R4C2); // Bottom-Left
+constraint allDifferent(R3C3, R3C4, R4C3, R4C4); // Bottom-Right
