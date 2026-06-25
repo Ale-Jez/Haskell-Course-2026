@@ -9,24 +9,15 @@ import Data.List  (nub)
 import AST
 import Solver
 
--- ============================================================
--- Helpers for building test data concisely
--- ============================================================
-
 -- Build an Assignment from a list of (name, int) pairs.
 fromPairs :: [(String, Int)] -> Assignment
 fromPairs = Map.fromList . map (\(k, v) -> (k, IntVal v))
 
--- ============================================================
 -- The spec
--- ============================================================
-
 spec :: Spec
 spec = do
 
-    -- ----------------------------------------------------------
     describe "checkConstraint - binary Eq" $ do
-    -- ----------------------------------------------------------
 
         it "accepts X == 3 when X = 3" $
             checkConstraint (fromPairs [("X", 3)])
@@ -49,9 +40,7 @@ spec = do
                 `shouldBe` False
 
 
-    -- ----------------------------------------------------------
     describe "checkConstraint - binary NEq / Lt / Le / Gt / Ge" $ do
-    -- ----------------------------------------------------------
 
         it "rejects A /= B when A = B = 1" $
             checkConstraint (fromPairs [("A", 1), ("B", 1)])
@@ -79,9 +68,7 @@ spec = do
                 `shouldBe` True
 
 
-    -- ----------------------------------------------------------
     describe "checkConstraint - partial assignment (unknown vars)" $ do
-    -- ----------------------------------------------------------
 
         it "returns True when the left variable is not yet assigned" $
             checkConstraint Map.empty
@@ -94,9 +81,7 @@ spec = do
                 `shouldBe` True
 
 
-    -- ----------------------------------------------------------
     describe "checkConstraint - allDifferent" $ do
-    -- ----------------------------------------------------------
 
         it "accepts when all assigned values are distinct" $
             checkConstraint (fromPairs [("A", 1), ("B", 2), ("C", 3)])
@@ -119,9 +104,7 @@ spec = do
                 `shouldBe` True
 
 
-    -- ----------------------------------------------------------
     describe "domainValues" $ do
-    -- ----------------------------------------------------------
 
         it "IntRange 1 5 produces exactly 5 values" $
             length (domainValues (IntRange 1 5)) `shouldBe` 5
@@ -134,60 +117,40 @@ spec = do
                 `shouldBe` [IntVal 3, IntVal 1, IntVal 2]
 
 
-    -- ----------------------------------------------------------
     describe "QuickCheck - solver soundness" $ do
-    -- ----------------------------------------------------------
 
-        -- ======================================================
-        -- Property 1: Soundness
-        -- Every solution produced by `solve` must satisfy ALL
-        -- constraints of the original program.
-        -- ======================================================
         it "every solution satisfies all constraints (soundness)" $
             property prop_soundness
 
-        -- ======================================================
-        -- Property 2: allDifferent solutions have no duplicates
-        -- ======================================================
         it "allDifferent solutions never contain duplicate values" $
             property prop_allDifferentSolutions
 
-        -- ======================================================
-        -- Property 3: applyBinOp Eq is symmetric
-        -- ======================================================
         it "applyBinOp Eq is symmetric" $
             property prop_eqSymmetric
 
-        -- ======================================================
-        -- Property 4: applyBinOp NEq is symmetric
-        -- ======================================================
         it "applyBinOp NEq is symmetric" $
             property prop_neqSymmetric
 
-        -- ======================================================
-        -- Property 5: IntRange domain size
-        -- ======================================================
         it "domainValues (IntRange lo hi) has exactly (hi - lo + 1) elements" $
             property prop_intRangeSize
 
 
--- ============================================================
--- QuickCheck Generators
--- ============================================================
 
--- | Generate a small variable name (single uppercase letter).
+
+-- QuickCheck Generators
+-- Generate a small variable name (single uppercase letter).
 genVarName :: Gen String
 genVarName = (:[]) <$> elements ['A'..'F']
 
--- | Generate a small integer value (keeps search space tiny so tests finish fast).
+-- Generate a small integer value
 genSmallInt :: Gen Int
 genSmallInt = choose (1, 3)
 
--- | Generate a small IntRange domain.
+-- Generate a small IntRange domain.
 genDomain :: Gen Domain
 genDomain = IntRange <$> genSmallInt <*> pure 3
 
--- | Generate a binary constraint between two (possibly equal) variable names.
+-- Generate a binary constraint between two (possibly equal) variable names.
 genBinaryConstraint :: [String] -> Gen Constraint
 genBinaryConstraint vars = do
     v1 <- elements vars
@@ -195,7 +158,7 @@ genBinaryConstraint vars = do
     op <- elements [Eq, NEq, Lt, Le, Gt, Ge]
     return (Binary op (Var v1) (Var v2))
 
--- | Generate a small CSP program: 2–3 variables, a handful of constraints.
+-- Generate CSP program
 genSmallProgram :: Gen Program
 genSmallProgram = do
     numVars <- choose (2, 3) :: Gen Int
@@ -205,18 +168,17 @@ genSmallProgram = do
     cons    <- vectorOf numCons (genBinaryConstraint names)
     return (Program varDecls cons)
 
--- ============================================================
--- QuickCheck Properties
--- ============================================================
 
--- | Property 1: Every assignment returned by solve satisfies isValid.
+
+-- QuickCheck Properties
+-- Every assignment returned by solve satisfies isValid.
 prop_soundness :: Property
 prop_soundness =
     forAll genSmallProgram $ \prog@(Program _ constraints) ->
         let solutions = solve prog
         in  all (\sol -> isValid sol constraints) solutions
 
--- | Property 2: For a pure allDifferent program, each solution has all distinct values.
+-- For a pure allDifferent program, each solution has all distinct values.
 prop_allDifferentSolutions :: Property
 prop_allDifferentSolutions =
     forAll genAllDiffProgram $ \prog ->
@@ -236,21 +198,21 @@ prop_allDifferentSolutions =
         let vals = Map.elems m
         in  length vals == length (nub vals)
 
--- | Property 3: applyBinOp Eq is symmetric (a == b ↔ b == a).
+-- applyBinOp Eq is symmetric
 prop_eqSymmetric :: Int -> Int -> Bool
 prop_eqSymmetric a b =
     applyBinOp Eq (IntVal a) (IntVal b)
     ==
     applyBinOp Eq (IntVal b) (IntVal a)
 
--- | Property 4: applyBinOp NEq is symmetric.
+-- applyBinOp NEq is symmetric.
 prop_neqSymmetric :: Int -> Int -> Bool
 prop_neqSymmetric a b =
     applyBinOp NEq (IntVal a) (IntVal b)
     ==
     applyBinOp NEq (IntVal b) (IntVal a)
 
--- | Property 5: IntRange lo hi always has exactly (hi - lo + 1) values.
+-- IntRange lo hi always has exactly (hi - lo + 1) values.
 prop_intRangeSize :: Property
 prop_intRangeSize =
     forAll genBoundedRange $ \(lo, hi) ->
@@ -259,5 +221,5 @@ prop_intRangeSize =
     genBoundedRange :: Gen (Int, Int)
     genBoundedRange = do
         lo <- choose (1, 10)
-        hi <- choose (lo, lo + 9)   -- guarantees lo <= hi, keeps list short
+        hi <- choose (lo, lo + 9)
         return (lo, hi)

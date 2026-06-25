@@ -9,12 +9,9 @@ import AST
 import Parser  (parseString)
 import Solver  (solve, Assignment)
 
--- ============================================================
 -- Helpers
--- ============================================================
 
--- | Load a .csp file relative to the test/ directory at runtime.
--- We use a path relative to the project root (where cabal test runs from).
+-- Load a .csp file relative to the test/ directory at runtime.
 loadCsp :: FilePath -> IO (Either String Program)
 loadCsp path = do
     contents <- readFile path
@@ -22,7 +19,7 @@ loadCsp path = do
         Left  err -> Left (show err)
         Right ast -> Right ast
 
--- | Assert a .csp file parses and returns its solutions.
+-- Assert a .csp file parses and returns its solutions.
 solveFile :: FilePath -> IO [Assignment]
 solveFile path = do
     result <- loadCsp path
@@ -30,33 +27,29 @@ solveFile path = do
         Left  err  -> fail $ "Parse error in " ++ path ++ ": " ++ err
         Right prog -> return (solve prog)
 
--- | Extract the Int out of an IntVal, failing loudly if something else.
+-- Extract the Int out of an IntVal
 intOf :: Value -> Int
 intOf (IntVal n) = n
 intOf v          = error $ "Expected IntVal, got: " ++ show v
 
--- | Extract the String out of a StrVal.
+-- Extract the String out of a StrVal.
 strOf :: Value -> String
 strOf (StrVal s) = s
 strOf v          = error $ "Expected StrVal, got: " ++ show v
 
--- | Look up a variable in an assignment (or fail the test).
+-- Look up a variable in an assignment (or fail the test).
 lookupVar :: String -> Assignment -> Value
 lookupVar var asgn =
     case Map.lookup var asgn of
         Just v  -> v
         Nothing -> error $ "Variable not found in solution: " ++ var
 
--- ============================================================
--- The spec
--- ============================================================
+
 
 spec :: Spec
 spec = do
 
-    -- ----------------------------------------------------------
     describe "End-to-end - Australia map colouring" $ do
-    -- ----------------------------------------------------------
 
         it "parses australia.csp without errors" $ do
             result <- loadCsp "test/australia.csp"
@@ -93,9 +86,7 @@ spec = do
             length (nub withoutT) `shouldBe` 6
 
 
-    -- ----------------------------------------------------------
-    describe "End-to-end - 4×4 Mini-Sudoku" $ do
-    -- ----------------------------------------------------------
+    describe "End-to-end - 4x4 Mini-Sudoku" $ do
 
         it "parses sudoku.csp without errors" $ do
             result <- loadCsp "test/sudoku.csp"
@@ -142,7 +133,7 @@ spec = do
             let vals col = sort $ map (intOf . flip lookupVar sol) col
             map vals cols `shouldBe` replicate 4 [1,2,3,4]
 
-        it "every 2×2 box has all four values 1..4" $ do
+        it "every 2x2 box has all four values 1..4" $ do
             solutions <- solveFile "test/sudoku.csp"
             let sol  = head solutions
             let boxes = [ ["R1C1","R1C2","R2C1","R2C2"]
@@ -153,14 +144,9 @@ spec = do
             map vals boxes `shouldBe` replicate 4 [1,2,3,4]
 
 
-    -- ----------------------------------------------------------
     describe "End-to-end - 4-Queens (programmatic)" $ do
-    -- ----------------------------------------------------------
-    --
-    -- The .csp DSL cannot express |Qi - Qj| /= |i - j| because it lacks
-    -- arithmetic. We therefore construct the Program in Haskell directly
-    -- and supply a custom diagonal checker.
-    --
+    -- The .csp DSL cannot express |Qi - Qj| /= |i - j| because it lacks arithmetic.
+    -- Thus construct the Program in Haskell directly and supply a custom diagonal checker.
 
         it "parses nqueens.csp without errors" $ do
             result <- loadCsp "test/nqueens.csp"
@@ -182,22 +168,8 @@ spec = do
             rows `shouldBe` [[2,4,1,3], [3,1,4,2]]
 
 
--- ============================================================
 -- 4-Queens helpers
--- ============================================================
 
--- | A Program value for 4-Queens.
--- Variables Q1..Q4 are the row positions of the queen in each column.
--- Constraints:
---   (a) allDifferent - no two queens in the same row
---   (b) diagonal - for each pair (i,j), |Qi - Qj| /= |i - j|
---       Encoded as: Qi - Qj /= (j - i)  AND  Qj - Qi /= (j - i)
---       Which in our Binary AST means: we add explicit NEq constraints
---       using intermediate values. Since Binary takes Expr (Var | Lit),
---       we cannot do subtraction. Instead we add the diagonal check
---       as a post-filter in 'noDiagonalAttack' and use the full
---       domain + allDifferent as the CSP; the 2 valid solutions are
---       then verified separately.
 nqueensProgram :: Program
 nqueensProgram = Program varDecls constraints
   where
@@ -205,12 +177,8 @@ nqueensProgram = Program varDecls constraints
                   , VarDecl "Q2" (IntRange 1 4)
                   , VarDecl "Q3" (IntRange 1 4)
                   , VarDecl "Q4" (IntRange 1 4) ]
-    -- No two queens in the same row
     constraints = [ NAry AllDifferent ["Q1","Q2","Q3","Q4"] ]
 
--- | Returns True iff no two queens in this assignment attack diagonally.
--- For columns i and j (1-indexed), queens attack diagonally when
--- |row_i - row_j| == |col_i - col_j|.
 noDiagonalAttack :: Assignment -> Bool
 noDiagonalAttack asgn =
     let cols = [("Q1",1), ("Q2",2), ("Q3",3), ("Q4",4)]

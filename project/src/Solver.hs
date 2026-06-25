@@ -66,7 +66,6 @@ domainValues (IntRange low high) = map IntVal [low .. high]
 solve :: Program -> [Assignment]
 solve (Program unassignedVars constraints) = backtrack Map.empty unassignedVars
   where
-    -- 'backtrack'
     backtrack :: Assignment -> [VarDecl] -> [Assignment]
     
     -- Base Case: If there are no variables left to assign, found a solution

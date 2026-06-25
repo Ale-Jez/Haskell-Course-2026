@@ -4,36 +4,24 @@ import Test.Hspec
 import Parser  (parseString)
 import AST
 
--- ============================================================
 -- Helper: assert a parse succeeds and gives the expected AST
--- ============================================================
-
 shouldParseAs :: String -> Program -> Expectation
 input `shouldParseAs` expected =
     parseString input `shouldBe` Right expected
 
--- ============================================================
--- Helper: assert a parse fails (we don't care about the error
--- message, just that it is a Left)
--- ============================================================
-
+-- Helper: assert a parse fails (we don't care about the error message, just that it is a Left)
 shouldFail :: String -> Expectation
 shouldFail input =
     case parseString input of
-        Left  _   -> return ()   -- good, we expected failure
+        Left  _   -> return ()
         Right ast -> expectationFailure $
             "Expected parse failure but got: " ++ show ast
 
--- ============================================================
 -- The spec
--- ============================================================
-
 spec :: Spec
 spec = do
 
-    -- ----------------------------------------------------------
     describe "Parser - variable declarations" $ do
-    -- ----------------------------------------------------------
 
         it "parses an integer-range domain" $
             "var X : 1..3;\n"
@@ -68,9 +56,9 @@ spec = do
                     []
 
 
-    -- ----------------------------------------------------------
+
+
     describe "Parser - constraints" $ do
-    -- ----------------------------------------------------------
 
         it "parses a variable == literal constraint" $
             "var X : 1..5;\nconstraint X == 3;\n"
@@ -111,9 +99,9 @@ spec = do
             "" `shouldParseAs` Program [] []
 
 
-    -- ----------------------------------------------------------
+
+
     describe "Parser - rejection of bad syntax" $ do
-    -- ----------------------------------------------------------
 
         it "rejects a var declaration missing the colon" $
             shouldFail "var X 1..3;\n"
