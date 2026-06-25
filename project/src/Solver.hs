@@ -83,3 +83,4 @@ solve (Program unassignedVars constraints) = backtrack Map.empty unassignedVars
         -- Check if this guess broke any rules.
         if isValid newAssignment constraints
             then backtrack newAssignment rest 
+            else []
