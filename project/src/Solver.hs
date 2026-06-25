@@ -38,7 +38,7 @@ checkConstraint assignment (Binary op e1 e2) =
 checkConstraint assignment (NAry AllDifferent vars) =
     -- Extract only the values that have currently been assigned
     let assignedVals = [val | v <- vars, Just val <- [Map.lookup v assignment]]
-    -- 'nub' removes duplicates. If the length changes, there was a duplicate!
+    -- 'nub' removes duplicates
     in length assignedVals == length (nub assignedVals)
 
 -- Checks if ALL constraints in the program are satisfied by the current assignment.
